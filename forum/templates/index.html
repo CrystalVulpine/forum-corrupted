@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<head>
+	<meta charset="utf-8"/>
+	<title>CrystalVulpine's forum</title>
+	<link rel='stylesheet' type='text/css' href='{{ url_for('static', filename='main.css') }}'/>
+	<script src='{{ url_for('static', filename='jquery.min.js') }}'></script>
+</head>
+
+<body>
+	<div class="header">
+		<a href="/">Home</a>
+		<div class="header-right">
+			{% if v %}
+				<a href="/user/{{ v.username }}">{{ v.username }}</a>
+				<a href="javascript:void(0)" onclick="$.post('/api/logout', ()=>{window.location.reload(true)})">Log out</a>
+			{% else %}
+				<a href="/login">Sign up or Log in</a>
+			{% endif %}
+		</div>
+	</div>
+	<div class="side">
+		<p>{{ sidebar_text }}</p>
+		<a class="submit-button" href="/submit">Submit a post</a>
+	</div>
+	<div class="content">
+		<form id="search" action="search">
+			<input type="text" name="search" placeholder="Search posts" class="search-bar">
+		</form>
+		{% for p in posts %}
+		    {% if not p.deleted and not p.admin_nuked %}
+				<div class="post">
+					{% set communities = p.communities.all() %}
+					<h4><a href="{{ '/c/' + communities[0].community.name if communities|length > 0 else '' }}/post/{{ p.id }}/">{{ p.title }}</a></h4>
+					<small>Posted by <a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a> at {{ p.creation_date }}</small><br>
+					{% if communities|length > 0 %}
+						<small>Posted in: 
+						{% for com in communities %}
+						    {% if (v and v.id == p.author_id) or not com.removed %}
+								<a href="/c/{{ com.community.name }}/">{{ com.community.name }}</a> 
+							{% endif %}
+						{% endfor %}
+						</small>
+					{% endif %}
+				</div>
+			{% endif %}
+		{% endfor %}
+	</div>
+</body>

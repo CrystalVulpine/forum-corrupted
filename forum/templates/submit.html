@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<head>
+	<meta charset="utf-8"/>
+	<title>Submit | CrystalVulpine's forum</title>
+	<link rel='stylesheet' type='text/css' href='{{ url_for('static', filename='main.css') }}'/>
+	<script src='{{ url_for('static', filename='jquery.min.js') }}'></script>
+</head>
+
+<body>
+	<div class="header">
+		<a href="/">Home</a>
+		<div class="header-right">
+			{% if v %}
+				<a href="/user/{{ v.username }}">{{ v.username }}</a>
+				<a href="javascript:void(0)" onclick="$.post('/api/logout', ()=>{window.location.reload(true)})">Log out</a>
+			{% else %}
+				<a href="/login">Sign up or Log in</a>
+			{% endif %}
+		</div>
+	</div>
+	<div class="side">
+	</div>
+	{% if c %}
+		<div class="banner" style="background: url({{ c.banner_url }})">
+		</div>
+	{% endif %}
+	<div class="content">
+		<form id="submit" action="/api/submit" method="post">
+			<input type="text" name="title" placeholder="Title" class="search-bar" minlength="1" maxlength="500" required>
+			<input type="text" name="url" placeholder="URL" class="search-bar" maxlength="2000">
+			<input type="text" name="body" placeholder="Body" class="search-bar" maxlength="10000">
+			<input type="text" name="communities" placeholder="Communities to post in (separate by space)" class="search-bar"{{' value=' + c.name if c else ''}}>
+			<a onclick="document.getElementById('submit').submit()" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Submit</a>
+		</form>
+	</div>
+</body>
