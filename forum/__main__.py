@@ -1,6 +1,4 @@
 from flask import *
-#from sqlalchemy import *
-#from sqlalchemy.orm import relationship, deferred, joinedload, lazyload, contains_eager
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__, template_folder = './templates', static_folder = './static')
