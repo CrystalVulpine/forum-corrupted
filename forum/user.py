@@ -24,7 +24,8 @@ class User(db.Model):
     post_score = db.Column(db.Integer, default=0)
     comment_score = db.Column(db.Integer, default=0)
 
-    posts=relationship("Post", lazy="dynamic", primaryjoin="Post.author_id==User.id", backref="author_rel")
+    posts=relationship("Post", lazy="dynamic", primaryjoin="Post.author_id==User.id")
+    comments=relationship("Comment", lazy="dynamic", primaryjoin="Comment.author_id==User.id")
 
     moderates=relationship("Moderator", lazy="dynamic")
     banned_from=relationship("Ban", lazy="dynamic")

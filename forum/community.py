@@ -21,6 +21,7 @@ class Community(db.Model):
     stylesheet = db.Column(db.String, default=None)
 
     posts=relationship("CommunityPost", lazy="dynamic")
+    comments=relationship("CommunityComment", lazy="dynamic")
 
     mods=relationship("Moderator", lazy="dynamic")
     banned=relationship("Ban", lazy="dynamic")

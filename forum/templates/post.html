@@ -32,7 +32,14 @@
 		<div class="post">
 			{% set communities = p.communities.all() %}
 			<h5><a href="{{('/c/' + c.name if c else '') + '/post/' + p.id|string + '/' if not p.url or p.url == '' else p.url}}">{{ p.title }}</a></h5>
-			<small>Posted by <a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a> at {{ p.creation_date }}</small>
+			<small>Posted by 
+			{% if p.deleted %}
+				<b>[Deleted user]</b>
+			{% else %}
+				<a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a>
+			{% endif %}
+			at {{ p.creation_date }}</small>
+			
 			{% if communities|length > 0 %}
 				<br><small>Posted in: 
 				{% for com in communities %}
@@ -43,8 +50,43 @@
 				</small>
 			{% endif %}
 			<br><div class="body">
-				<p>{{p.body}}</p>
+				<p>{{ p.body }}</p>
 			</div>
 		</div>
+		<form id="comment" action="/api/comment" method="post">
+			<input type="text" name="body" placeholder="Comment" class="search-bar" maxlength="10000">
+			<input type="hidden" name="post" value="{{ p.id }}">
+			<input type="hidden" name="parent" value="0">
+			<input type="hidden" name="community" value="{{ c.id if c else 0 }}">
+			<a onclick="document.getElementById('comment').submit()" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Submit</a>
+		</form>
+		{% macro render_comment(pcomment) -%}
+			{% set ccomment = pcomment.comment %}
+			{% set comment = ccomment.comment %}
+			{% if ((not ccomment.removed or (v and v.id == comment.author_id)) and not comment.deleted) or pcomment.children|length > 0 %}
+				<div class="comment">
+					<small>Posted by 
+					{% if comment.deleted %}
+						<b>[Deleted user]</b>
+					{% else %}
+						<a href="/user/{{ comment.author.username }}/">{{ comment.author.username }}</a>
+					{% endif %}
+					at {{ comment.creation_date }}</small>
+					{% if ccomment.removed and not (v and v.id == comment.author_id)  %}
+						<em style="background-color: gray">[removed]</em>
+					{% else %}
+						<p>{{ comment.body }}</p>
+					{% endif %}
+					<small><a class="reply-button" id="reply-{{ comment.id }}" href="javascript:void(0)">reply</a></small>
+					{% for child in pcomment.children %}
+						{{ render_comment(child) }}
+					{% endfor %}
+				</div>
+			{% endif %}
+		{%- endmacro %}
+		
+		{% for pcomment in comments %}
+			{{ render_comment(pcomment) }}
+		{% endfor %}
 	</div>
 </body>

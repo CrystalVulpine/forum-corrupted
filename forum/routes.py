@@ -7,6 +7,7 @@ import re
 from forum.user import *
 from forum.community import *
 from forum.post import *
+from forum.comment import *
 from forum.relationships import *
 from forum.__main__ import app,db
 
@@ -104,22 +105,56 @@ def render_createc():
         abort(403)
     return render_template("edit_community.html", v = v)
 
+class ParentComment:
+    def __init__(self, comment):
+        self.comment = comment
+        self.children = []
+
 @app.route('/post/<id>/')
 def render_post(id):
+    from collections import OrderedDict 
+
     username = session.get('username')
     v = User.get_user(username) if username else None
     p = Post.by_id(id)
-    return render_template("post.html", v = v, p = p)
+
+    comments = p.comments
+    all_comments = OrderedDict()
+    commenttree = []
+    for comment in comments:
+        pc = ParentComment(CommunityComment(comment_id = comment.id, comment = comment))
+        all_comments[comment.id] = pc
+        if comment.parent_id == 0:
+            commenttree.append(pc)
+        else:
+            all_comments[comment.parent_id].children.append(pc)
+            
+    return render_template("post.html", v = v, p = p, comments = commenttree)
 
 @app.route('/c/<name>/post/<id>/')
 def render_postinc(name, id):
+    from collections import OrderedDict 
+
     username = session.get('username')
     v = User.get_user(username) if username else None
     p = Post.by_id(id)
     c = Community.get_community(name)
-    if not p.communities.filter_by(community_id = c.id).first():
+    cp = p.communities.filter_by(community_id = c.id).first()
+    if not cp:
         abort(404)
-    return render_template("post.html", v = v, p = p, c = c)
+
+    comments = cp.comments
+    all_comments = OrderedDict()
+    commenttree = []
+    for comment in comments:
+        pc = ParentComment(comment)
+        all_comments[comment.comment_id] = pc
+        if comment.comment.parent_id == 0:
+            commenttree.append(pc)
+        else:
+            all_comments[comment.comment.parent_id].children.append(pc)
+
+    return render_template("post.html", v = v, p = p, c = c, comments = commenttree)
 
 @app.route('/c/<name>/edit/')
 def render_editc(name):
@@ -211,12 +246,44 @@ def submit():
             if c:
                 if v.admin < 1 and c.banned.filter_by(user_id = v.id).first():
                     continue
-                    cp = CommunityPost(post_id = p.id, community_id = c.id)
-                    if v.spammer:
-                        cp.removed = True
-                    db.session.add(cp)
+                cp = CommunityPost(post_id = p.id, community_id = c.id)
+                if v.spammer:
+                    cp.removed = True
+                db.session.add(cp)
         db.session.commit()
         return redirect(('/c/' + communities[0] if len(communities) > 0 else '') + '/post/' + str(p.id) + '/')
+
+@app.route('/api/comment', methods = ['POST'])
+def submit_comment():
+    username = session.get('username')
+    v = User.get_user(username) if username else None
+    if not v:
+        abort(403)
+    if v.banned:
+        abort(403)
+    body = request.form['body'].strip()
+    comment = Comment(body = body, author_id = v.id, post_id = int(request.form['post']), parent_id = int(request.form['parent']))
+    
+    if not comment:
+        abort(500)
+    else:
+        db.session.add(comment)
+        db.session.flush()
+        cps = comment.post.communities
+        for cp in cps:
+            c = cp.community
+            if v.admin < 1 and c.banned.filter_by(user_id = v.id).first():
+                continue
+            cc = CommunityComment(comment_id = comment.id, community_id = cp.community_id, post_id = comment.post_id, cpost_id = cp.id)
+            if v.spammer:
+                cc.removed = True
+            db.session.add(cc)
+        db.session.commit()
+        c = Community.by_id(int(request.form['community']))
+        if c:
+            return redirect(('/c/' + c.name) + '/post/' + str(comment.post_id) + '/')
+        else:
+            return redirect('/post/' + str(comment.post_id) + '/')
 
 @app.route('/user/<username>/')
 def render_userpage(username):

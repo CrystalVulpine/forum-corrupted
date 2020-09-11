@@ -22,15 +22,15 @@
 	<div class="banner" style="background: url({{ c.banner_url }})">
 	</div>
 	<div class="side">
-		<p></p>
+		<p>{{ c.description }}</p>
 		<a class="submit-button" href="/c/{{ c.name }}/submit">Submit a post</a>
 	</div>
 	<div class="content">
 		<h3>{{ c.name }}: {{ c.title }}</h3>
-		{% set posts = c.posts.filter_by(removed=False).limit(1024) %}
+		{% set posts = c.posts.filter_by().limit(1024) %}
 		{% for post in posts %}
 			{% set p = post.post %}
-		    {% if not p.deleted and not p.admin_nuked %}
+		    {% if not p.deleted and not p.admin_nuked and (not post.removed or (v and v.id == p.author_id)) %}
 		    	{% set communities = p.communities.all() %}
 				<div class="post">
 					<h5><a href="/c/{{ c.name }}/post/{{ p.id }}/">{{ p.title }}</a></h5>

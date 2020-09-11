@@ -72,11 +72,18 @@ html, body {
 
 .post h5 {
 	font-size: medium;
-	text-decoration: none;
 }
 
 .post {
 	border: 1px solid black;
 	margin: 10px;
+}
+
+.post * {
+	text-decoration: none;
+}
+
+.comment {
+	margin: 5px;
 }
 

@@ -100,6 +100,7 @@ class CommunityPost(db.Model):
 
     post=relationship("Post", lazy="joined")
     community=relationship("Community", lazy="joined")
+    comments=relationship("CommunityComment", lazy="dynamic", primaryjoin="CommunityComment.cpost_id==CommunityPost.id")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -111,4 +112,32 @@ class CommunityPost(db.Model):
 
     def __repr__(self):
         return f"<CommunityPost(id={self.id}, post_id={self.post_id}, community_id={self.community_id})>"
+
+class CommunityComment(db.Model):
+    __tablename__ = "comment_communities"
+    id = Column(Integer, primary_key=True)
+    comment_id = Column(Integer, ForeignKey("comments.id"))
+    community_id = Column(Integer, ForeignKey("communities.id"))
+    post_id = Column(Integer, ForeignKey("posts.id"))
+    removed = Column(Boolean, default=False)
+    removed_by = Column(Integer, default=0)
+    removal_reason = Column(String, default='spam')
+    locked = Column(Boolean, default=False)
+    approved = Column(Boolean, default=False)
+
+    comment=relationship("Comment", lazy="joined")
+    community=relationship("Community", lazy="joined")
+    cpost_id = Column(Integer, ForeignKey("post_communities.id"))
+    post=relationship("CommunityPost", lazy="joined")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def community(self):
+        import forum.community as community
+        return community.Community.by_id(self.community_id)
+
+    def __repr__(self):
+        return f"<CommunityComment(id={self.id}, comment_id={self.comment_id}, community_id={self.community_id})>"
 

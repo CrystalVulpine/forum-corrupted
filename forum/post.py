@@ -2,7 +2,6 @@ from flask import *
 import time
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, deferred, joinedload, lazyload, contains_eager
-import bcrypt
 from forum.__main__ import db
 from forum.relationships import *
 
@@ -22,6 +21,7 @@ class Post(db.Model):
     admin_removal = db.Column(db.String, default=None)
 
     communities=relationship("CommunityPost", lazy="dynamic")
+    comments=relationship("Comment", lazy="dynamic", primaryjoin="Comment.post_id==Post.id")
 
 
     def __init__(self, **kwargs):

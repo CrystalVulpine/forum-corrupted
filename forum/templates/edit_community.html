@@ -29,11 +29,11 @@
 			<input type="text" name="title" placeholder="Title" class="search-bar" minlength="1" maxlength="50"{{ ' value=' + c.title if c and c.title else '' }} required>
 			<input type="text" name="description" placeholder="Description" class="search-bar" minlength="1" maxlength="500"{{ ' value=' + c.description if c and c.description else '' }}>
 			<select name="mode">
-				<option value="public"{{ ' selected="true"' if c.mode == 'public' else ''}}>Public</option>
-				<option value="private"{{ ' selected="true"' if c.mode == 'private' else ''}}>Private</option>
-				<option value="restricted"{{ ' selected="true"' if c.mode == 'restricted' else ''}}>Restricted</option>
-				<option value="exclusive"{{ ' selected="true"' if c.mode == 'exclusive' else ''}}>Exclusive</option>
-				<option value="archived"{{ ' selected="true"' if c.mode == 'archived' else ''}}>Archived</option>
+				<option value="public"{{ ' selected="true"' if c and c.mode == 'public' else ''}}>Public</option>
+				<option value="private"{{ ' selected="true"' if c and c.mode == 'private' else ''}}>Private</option>
+				<option value="restricted"{{ ' selected="true"' if c and c.mode == 'restricted' else ''}}>Restricted</option>
+				<option value="exclusive"{{ ' selected="true"' if c and c.mode == 'exclusive' else ''}}>Exclusive</option>
+				<option value="archived"{{ ' selected="true"' if c and c.mode == 'archived' else ''}}>Archived</option>
 			</select>
 			<input type="text" name="icon_url" placeholder="Icon URL" class="search-bar"{{ ' value=' + c.icon_url if c and c.icon_url else '' }}>
 			<input type="text" name="banner_url" placeholder="Banner URL" class="search-bar"{{ ' value=' + c.banner_url if c and c.banner_url else '' }}>
