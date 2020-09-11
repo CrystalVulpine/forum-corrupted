@@ -105,11 +105,6 @@ class CommunityPost(db.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @property
-    def community(self):
-        import forum.community as community
-        return community.Community.by_id(self.community_id)
-
     def __repr__(self):
         return f"<CommunityPost(id={self.id}, post_id={self.post_id}, community_id={self.community_id})>"
 
@@ -134,9 +129,8 @@ class CommunityComment(db.Model):
         super().__init__(*args, **kwargs)
 
     @property
-    def community(self):
-        import forum.community as community
-        return community.Community.by_id(self.community_id)
+    def by_id(cls, id):
+        return db.session.query(cls).get(id)
 
     def __repr__(self):
         return f"<CommunityComment(id={self.id}, comment_id={self.comment_id}, community_id={self.community_id})>"

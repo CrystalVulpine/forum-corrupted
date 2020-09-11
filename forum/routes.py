@@ -274,6 +274,8 @@ def submit_comment():
             c = cp.community
             if v.admin < 1 and c.banned.filter_by(user_id = v.id).first():
                 continue
+            if comment.parent_id != 0 and not comment.parent.communities.filter_by(comment_id = comment.parent_id).first():
+                continue
             cc = CommunityComment(comment_id = comment.id, community_id = cp.community_id, post_id = comment.post_id, cpost_id = cp.id)
             if v.spammer:
                 cc.removed = True
