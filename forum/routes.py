@@ -244,7 +244,7 @@ def submit():
         for cname in communities:
             c = Community.get_community(cname)
             if c:
-                if v.admin < 1 and c.banned.filter_by(user_id = v.id).first():
+                if v.admin < 1 and (c.banned.filter_by(user_id = v.id).first() or (c.mode != "public" and (c.mode == "archived" or not c.contributors.filter_by(user_id = v.id).first()) and not c.mods.filter_by(user_id = v.id).first())):
                     continue
                 cp = CommunityPost(post_id = p.id, community_id = c.id)
                 if v.spammer:
@@ -272,7 +272,7 @@ def submit_comment():
         cps = comment.post.communities
         for cp in cps:
             c = cp.community
-            if v.admin < 1 and c.banned.filter_by(user_id = v.id).first():
+            if v.admin < 1 and (c.banned.filter_by(user_id = v.id).first() or ((c.mode != "public" and c.mode != "restricted") and (c.mode == "archived" or not c.contributors.filter_by(user_id = v.id).first()) and not c.mods.filter_by(user_id = v.id).first())):
                 continue
             if comment.parent_id != 0 and not comment.parent.communities.filter_by(comment_id = comment.parent_id).first():
                 continue

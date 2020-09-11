@@ -21,7 +21,9 @@
 	</div>
 	<div class="side">
 		<p>{{ sidebar_text }}</p>
-		<a class="submit-button" href="/submit">Submit a post</a>
+		{% if not (v and v.banned) %}
+			<a class="submit-button" href="{{ '/submit' if v else '/login/' }}">Submit a post</a>
+		{% endif %}
 	</div>
 	<div class="content">
 		<form id="search" action="search">

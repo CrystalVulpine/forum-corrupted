@@ -8,6 +8,9 @@
 </head>
 
 <body>
+	{% set user_banned = v and c and v.admin < 1 and (v.banned or c.banned.filter_by(user_id = v.id).first()) %}
+	{% set user_contributor = v and c and c.contributors.filter_by(user_id = v.id).first() %}
+	{% set user_mod = v and c and c.mods.filter_by(user_id = v.id).first() %}
 	<div class="header">
 		<a href="/">Home</a>
 		<div class="header-right">
@@ -23,7 +26,17 @@
 	</div>
 	<div class="side">
 		<p>{{ c.description }}</p>
-		<a class="submit-button" href="/c/{{ c.name }}/submit">Submit a post</a>
+		{% if not user_banned %}
+			{% if c.mode == "public" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1) %}
+				<a class="submit-button" href="{{ '/c/' + c.name if v else '/login/' }}/submit/">Submit a post</a>
+			{% elif c.mode == "archived" %}
+				<p class="submit-button-disabled">New posts disabled</p>
+				<small>This community is now archived and read-only.</small>
+			{% else %}
+				<p class="submit-button-disabled">Posts restricted</p>
+				<small>Posts in this community are restricted to approved users.</small>
+			{% endif %}
+		{% endif %}
 	</div>
 	<div class="content">
 		<h3>{{ c.name }}: {{ c.title }}</h3>

@@ -2,14 +2,15 @@
 
 <head>
 	<meta charset="utf-8"/>
-	<title>{{ user.username }}'s overview | CrystalVulpine's forum</title>
+	<title>{% block title %}{% endblock %}</title>
 	<link rel='stylesheet' type='text/css' href='{{ url_for('static', filename='main.css') }}'/>
 	<script src='{{ url_for('static', filename='jquery.min.js') }}'></script>
 </head>
 
 <body>
+	{% block header %}
 	<div class="header">
-		<a href="/">Home</a>
+		<a href="/" style="font-size: small; text-decoration: none">Home</a>
 		<div class="header-right">
 			{% if v %}
 				<a href="/user/{{ v.username }}">{{ v.username }}</a>
@@ -19,13 +20,5 @@
 			{% endif %}
 		</div>
 	</div>
-	<div class="banner" style="background: url({{ c.banner_url }})">
-	</div>
-	<div class="side">
-		<p></p>
-		<a class="submit-button" href="/submit">Submit a post</a>
-	</div>
-	<div class="content">
-		<h3>{{ user.username }}</h3>
-	</div>
+	{% endblock %}
 </body>

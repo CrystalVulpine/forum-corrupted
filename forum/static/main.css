@@ -50,6 +50,20 @@ html, body {
 	margin-bottom: 15px;
 }
 
+.submit-button-disabled {
+	color: white;
+	font-size: larger;
+	background-color: #bfbfbf;
+	border-radius: 15px;
+	margin: 10px;
+	display: block;
+	text-align: center;
+	padding: 10px;
+	text-decoration: none;
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
 .content {
 	margin-right: 370px;
 }

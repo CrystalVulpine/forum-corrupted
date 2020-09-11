@@ -8,6 +8,9 @@
 </head>
 
 <body>
+	{% set user_banned = v and c and v.admin < 1 and (v.banned or c.banned.filter_by(user_id = v.id).first()) %}
+	{% set user_contributor = v and c and c.contributors.filter_by(user_id = v.id).first() %}
+	{% set user_mod = v and c and c.mods.filter_by(user_id = v.id).first() %}
 	<div class="header">
 		<a href="/">Home</a>
 		<div class="header-right">
@@ -25,7 +28,19 @@
 	{% endif %}
 	<div class="side">
 		<p></p>
-		<a class="submit-button" href="{{'/c/' + c.name if c else ''}}/submit">Submit a post</a>
+		{% if not user_banned %}
+			{% if not c %}
+				<a class="submit-button" href="{{ '/submit' if v else '/login/' }}">Submit a post</a>
+			{% elif c.mode == "public" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1) %}
+				<a class="submit-button" href="{{ '/c/' + c.name if v else '/login/' }}/submit/">Submit a post</a>
+			{% elif c.mode == "archived" %}
+				<p class="submit-button-disabled">New posts disabled</p>
+				<small>This community is now archived and read-only.</small>
+			{% else %}
+				<p class="submit-button-disabled">Posts restricted</p>
+				<small>Posts in this community are restricted to approved users.</small>
+			{% endif %}
+		{% endif %}
 	</div>
 	<div class="content">
 		<h3>{{ c.name + ':' + c.title if c else '' }}</h3>
@@ -53,13 +68,6 @@
 				<p>{{ p.body }}</p>
 			</div>
 		</div>
-		<form id="comment-0" action="/api/comment" method="post">
-			<input type="text" name="body" placeholder="Comment" class="search-bar" maxlength="10000">
-			<input type="hidden" name="post" value="{{ p.id }}">
-			<input type="hidden" name="parent" value="0">
-			<input type="hidden" name="community" value="{{ c.id if c else 0 }}">
-			<a onclick="document.getElementById('comment-0').submit()" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Submit</a>
-		</form>
 		{% macro render_comment(pcomment) -%}
 			{% set ccomment = pcomment.comment %}
 			{% set comment = ccomment.comment %}
@@ -77,15 +85,23 @@
 					{% else %}
 						<p>{{ comment.body }}</p>
 					{% endif %}
-					<small><a class="reply-button" id="reply-{{ comment.id }}" href="javascript:void(0)" onclick="document.getElementById('comment-{{ comment.id }}').style = ''">reply</a></small>
-					<form id="comment-{{ comment.id }}" action="/api/comment" method="post" style="display: none!important">
-						<input type="text" name="body" placeholder="Comment" class="search-bar" maxlength="10000">
-						<input type="hidden" name="post" value="{{ p.id }}">
-						<input type="hidden" name="parent" value="{{ comment.id }}">
-						<input type="hidden" name="community" value="{{ c.id if c else 0 }}">
-						<a onclick="document.getElementById('comment-{{ comment.id }}').submit()" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Submit</a>
-						<a onclick="document.getElementById('comment-{{ comment.id }}').style = 'display: none!important'" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Cancel</a>
-					</form>
+					{% if not user_banned and (not c or c.mode == "public" or c.mode == "restricted" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1)) %}
+						<small><a class="reply-button" id="reply-{{ comment.id }}" 
+						{% if not v %}
+							href="/login/"
+						{% else %}
+							href="javascript:void(0)" onclick="document.getElementById('comment-{{ comment.id }}').style = ''"
+						{% endif %}
+						>reply</a></small>
+						<form id="comment-{{ comment.id }}" action="/api/comment" method="post" style="display: none!important">
+							<input type="text" name="body" placeholder="Comment" class="search-bar" maxlength="10000">
+							<input type="hidden" name="post" value="{{ p.id }}">
+							<input type="hidden" name="parent" value="{{ comment.id }}">
+							<input type="hidden" name="community" value="{{ c.id if c else 0 }}">
+							<a onclick="document.getElementById('comment-{{ comment.id }}').submit()" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Submit</a>
+							<a onclick="document.getElementById('comment-{{ comment.id }}').style = 'display: none!important'" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Cancel</a>
+						</form>
+					{% endif %}
 					{% for child in pcomment.children %}
 						{{ render_comment(child) }}
 					{% endfor %}
@@ -93,6 +109,21 @@
 			{% endif %}
 		{%- endmacro %}
 		
+		{% if not user_banned and (not c or c.mode == "public" or c.mode == "restricted" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1)) %}
+			<form id="comment-0" action="/api/comment" method="post">
+				<input type="text" name="body" placeholder="Comment" class="search-bar" maxlength="10000">
+				<input type="hidden" name="post" value="{{ p.id }}">
+				<input type="hidden" name="parent" value="0">
+				<input type="hidden" name="community" value="{{ c.id if c else 0 }}">
+				<a 
+				{% if not v %}
+					href="/login/"
+				{% else %}
+					onclick="document.getElementById('comment-0').submit()" href="javascript:void(0)"
+				{% endif %}
+				 class="submit-button" style="margin-right:-15px">Submit</a>
+			</form>
+		{% endif %}
 		{% for pcomment in comments %}
 			{{ render_comment(pcomment) }}
 		{% endfor %}
