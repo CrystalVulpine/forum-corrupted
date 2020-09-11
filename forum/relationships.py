@@ -128,10 +128,6 @@ class CommunityComment(db.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @property
-    def by_id(cls, id):
-        return db.session.query(cls).get(id)
-
     def __repr__(self):
         return f"<CommunityComment(id={self.id}, comment_id={self.comment_id}, community_id={self.community_id})>"
 
