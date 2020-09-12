@@ -31,6 +31,11 @@
 			<input type="text" name="url" placeholder="URL" class="search-bar" maxlength="2000">
 			<input type="text" name="body" placeholder="Body" class="search-bar" maxlength="10000">
 			<input type="text" name="communities" placeholder="Communities to post in (separate by space)" class="search-bar"{{' value=' + c.name if c else ''}}>
+			{% if "CANT_SUBMIT" in get_flashed_messages() %}
+				<p style="color:red">You can't submit in one or more of these communities. You may be banned or not have access. Remove them and try again.</p>
+			{% elif "CANT_SUBMIT_PRIVATE" in get_flashed_messages() %}
+				<p style="color:red">You can't submit to multiple communities when posting in a private one.</p>
+			{% endif %}
 			<a onclick="document.getElementById('submit').submit()" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Submit</a>
 		</form>
 	</div>

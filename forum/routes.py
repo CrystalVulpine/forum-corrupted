@@ -314,7 +314,7 @@ def submit_comment():
         for cp in cps:
             c = cp.community
             if not c.can_comment(v):
-                flash("CANT_COMMENT")
+                abort(403)
             if comment.parent_id != 0 and not comment.parent.communities.filter_by(community_id = c.id).first():
                 continue
             cc = CommunityComment(comment_id = comment.id, community_id = cp.community_id, post_id = comment.post_id, cpost_id = cp.id)
