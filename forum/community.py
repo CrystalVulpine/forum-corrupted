@@ -6,19 +6,21 @@ from forum.__main__ import db
 
 class Community(db.Model):
     __tablename__ = "communities"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, default=None)
-    title = db.Column(db.String, default=None)
-    deleted = db.Column(db.Integer, default=0)
-    banned = db.Column(db.Integer, default=0)
-    locked = db.Column(db.Integer, default=0)
-    mode = db.Column(db.String, default='public')
-    creation_date = db.Column(db.Integer, default=0)
-    creator_id = db.Column(db.Integer, default=0)
-    description = db.Column(db.String, default=None)
-    icon_url = db.Column(db.String, default=None)
-    banner_url = db.Column(db.String, default=None)
-    stylesheet = db.Column(db.String, default=None)
+    id = Column(Integer, primary_key=True)
+    name = Column(String, default=None)
+    title = Column(String, default=None)
+    deleted = Column(Boolean, default=False)
+    is_banned = Column(Boolean, default=False)
+    locked = Column(Boolean, default=False)
+    mode = Column(String, default='public')
+    creation_date = Column(Integer, default=0)
+    creator_id = Column(Integer, default=0)
+    description = Column(String, default=None)
+    icon_url = Column(String, default=None)
+    banner_url = Column(String, default=None)
+    stylesheet = Column(String, default=None)
+    sidebar = Column(String, default=None)
+    ban_message = Column(String, default=None)
 
     posts=relationship("CommunityPost", lazy="dynamic")
     comments=relationship("CommunityComment", lazy="dynamic")
@@ -39,4 +41,41 @@ class Community(db.Model):
     @classmethod
     def by_id(cls, id):
         return db.session.query(cls).get(id)
+
+    def can_view(self, user):
+        if user and user.admin >= 1:
+            return True
+        if self.is_banned:
+            return False
+        if self.mode == "private" and (not user or (not self.contributors.filter_by(user_id = user.id).first() and not self.mods.filter_by(user_id = user.id).first())):
+            return False
+        return True
+
+    def can_submit(self, user):
+        if user and user.admin >= 1:
+            return True
+        if self.is_banned or self.locked:
+            return False
+        if user and (user.banned or self.banned.filter_by(user_id = user.id).first()):
+            return False
+        if not user or not self.mods.filter_by(user_id = user.id).first():
+            if self.mode == "archived":
+                return False
+            elif self.mode != "public" and (not user or not self.contributors.filter_by(user_id = user.id).first()):
+                return False
+        return True
+
+    def can_comment(self, user):
+        if user and user.admin >= 1:
+            return True
+        if self.is_banned or self.locked:
+            return False
+        if user and (user.banned or self.banned.filter_by(user_id = user.id).first()):
+            return False
+        if not user or not self.mods.filter_by(user_id = user.id).first():
+            if self.mode == "archived":
+                return False
+            elif (self.mode != "public" and self.mode != "restricted") and (not user or not self.contributors.filter_by(user_id = user.id).first()):
+                return False
+        return True
 

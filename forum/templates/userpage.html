@@ -25,10 +25,13 @@
 		<div class="banner" style="background: url({{ c.banner_url }})"></div>
 	</div>
 	<div class="side">
-		<p></p>
+		<p>{{ c.sidebar if c.sidebar and c.sidebar != '' else c.description if c.description else '' }}</p>
 		{% if not user_banned %}
-			{% if c.mode == "public" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1) %}
-				<a class="submit-button" href="{{ '/c/' + c.name if v else '/login/' }}/submit/">Submit a post</a>
+			{% if c.locked and not (v and v.admin >= 1) %}
+				<p class="submit-button-disabled">Posts banned</p>
+				<small>This community has been banned: {{ c.ban_message if c.ban_message else 'This community has been banned for breaking the rules.' }}</small>
+			{% elif c.mode == "public" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1) %}
+				<a class="submit-button" href="{{ '/user/' + user.username + '/submit/' if v else '/login/' }}">Submit a post</a>
 			{% endif %}
 		{% endif %}
 	</div>
@@ -36,17 +39,15 @@
 		<h3>{{ user.username }}</h3>
 		{% set posts = user.posts.filter_by(deleted=False, admin_nuked=False).limit(1024) %}
 		{% for p in posts %}
-		    {% if not p.deleted and not p.admin_nuked %}
+		    {% if not p.deleted and p.can_view(v) %}
 				<div class="post">
-					{% set communities = p.communities.all() %}
+					{% set communities = p.posted_in(v) %}
 					<h4><a href="{{ '/c/' + communities[0].community.name if communities|length > 0 else '' }}/post/{{ p.id }}/">{{ p.title }}</a></h4>
 					<small>Posted by <a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a> at {{ p.creation_date }}</small><br>
 					{% if communities|length > 0 %}
 						<small>Posted in: 
 						{% for com in communities %}
-						    {% if (v and v.id == p.author_id) or not com.removed %}
-								<a href="/c/{{ com.community.name }}/">{{ com.community.name }}</a> 
-							{% endif %}
+							<a href="/c/{{ com.community.name }}/post/{{ p.id }}/">{{ com.community.name }}</a> 
 						{% endfor %}
 						</small>
 					{% endif %}
@@ -55,9 +56,9 @@
 		{% endfor %}
 		{% set comments = user.comments.filter_by(deleted=False).limit(1024) %}
 		{% for comment in comments %}
-		    {% if not comment.deleted and (not comment.admin_removal or (v and v.id == comment.author_id)) %}
+		    {% if not comment.deleted and comment.can_view(v) %}
 				<div class="comment">
-					{% set communities = comment.communities.all() %}
+					{% set communities = comment.post.posted_in(v) %}
 					<h4><a href="{{ '/c/' + communities[0].community.name if communities|length > 0 else '' }}/post/{{ comment.post_id }}/comment/{{ comment.id }}">{{ comment.post.title }}</a></h4>
 					<small>Posted by <a href="/user/{{ comment.author.username }}/">{{ comment.author.username }}</a> at {{ comment.creation_date }}</small><br>
 					<p>{{ comment.body }}</p>

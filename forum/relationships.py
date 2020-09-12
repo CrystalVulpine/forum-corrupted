@@ -97,6 +97,7 @@ class CommunityPost(db.Model):
     locked = Column(Boolean, default=False)
     approved = Column(Boolean, default=False)
     flair = Column(String, default=None)
+    flair_class = Column(String, default=None)
 
     post=relationship("Post", lazy="joined")
     community=relationship("Community", lazy="joined")
@@ -119,6 +120,8 @@ class CommunityComment(db.Model):
     removal_reason = Column(String, default='spam')
     locked = Column(Boolean, default=False)
     approved = Column(Boolean, default=False)
+    flair = Column(String, default=None)
+    flair_class = Column(String, default=None)
 
     comment=relationship("Comment", lazy="joined")
     community=relationship("Community", lazy="joined")

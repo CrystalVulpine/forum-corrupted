@@ -25,10 +25,13 @@
 	<div class="banner" style="background: url({{ c.banner_url }})">
 	</div>
 	<div class="side">
-		<p>{{ c.description }}</p>
+		<p>{{ c.sidebar if c.sidebar and c.sidebar != '' else c.description if c.description else '' }}</p>
 		{% if not user_banned %}
-			{% if c.mode == "public" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1) %}
-				<a class="submit-button" href="{{ '/c/' + c.name if v else '/login/' }}/submit/">Submit a post</a>
+			{% if c.locked and not (v and v.admin >= 1) %}
+				<p class="submit-button-disabled">Posts banned</p>
+				<small>This community has been banned: {{ c.ban_message if c.ban_message else 'This community has been banned for breaking the rules.' }}</small>
+			{% elif c.mode == "public" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1) %}
+				<a class="submit-button" href="{{ '/c/' + c.name + '/submit/' if v else '/login/' }}">Submit a post</a>
 			{% elif c.mode == "archived" %}
 				<p class="submit-button-disabled">New posts disabled</p>
 				<small>This community is now archived and read-only.</small>
@@ -39,21 +42,19 @@
 		{% endif %}
 	</div>
 	<div class="content">
-		<h3>{{ c.name }}: {{ c.title }}</h3>
+		<h3><a href="/c/{{ c.name }}/">{{ c.name }}</a>{{ ': ' + c.title if c.title and c.title != '' else '' }}</h3>
 		{% set posts = c.posts.filter_by().limit(1024) %}
 		{% for post in posts %}
 			{% set p = post.post %}
-		    {% if not p.deleted and not p.admin_nuked and (not post.removed or (v and v.id == p.author_id)) %}
-		    	{% set communities = p.communities.all() %}
+		    {% if not p.deleted and p.can_view(v) and (not post.removed or (v and v.id == p.author_id)) %}
+		    	{% set communities = p.posted_in(v) %}
 				<div class="post">
 					<h5><a href="/c/{{ c.name }}/post/{{ p.id }}/">{{ p.title }}</a></h5>
 					<small>Posted by <a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a> at {{ p.creation_date }}</small><br>
 					{% if communities|length > 0 %}
 						<small>Posted in: 
 						{% for com in communities %}
-						    {% if (v and v.id == p.author_id) or not com.removed %}
-								<a href="/c/{{ com.community.name }}/">{{ com.community.name }}</a> 
-							{% endif %}
+							<a href="/c/{{ com.community.name }}/post/{{ p.id }}/">{{ com.community.name }}</a> 
 						{% endfor %}
 						</small>
 					{% endif %}

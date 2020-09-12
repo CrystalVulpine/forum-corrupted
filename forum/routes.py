@@ -29,7 +29,7 @@ def render_notfound(e):
     return render_template('error.html', v = v, error="Page not found", error_desc="404: Page does not exist"), 404
 
 @app.errorhandler(403)
-def render_notfound(e):
+def render_noaccess(e):
     username = session.get('username')
     v = User.get_user(username) if username else None
     return render_template('error.html', v = v, error="Forbidden", error_desc="403: Access denied"), 403
@@ -59,31 +59,27 @@ def render_submitinc(name):
     v = User.get_user(username) if username else None
     if not v:
         return redirect('/login/')
-    if v.admin < 1:
-        if v.banned or c.banned.filter_by(user_id = v.id).first():
-            abort(403)
-        if c.mode != 'public' and not c.contributors.filter_by(user_id = v.id).first():
-            abort(403)
-        if c.mode == 'archived' and not c.mods.filter_by(user_id = v.id).first():
-            abort(403)
+    if not c.can_view(v):
+        if c.is_banned:
+            return render_template("error.html", v = v, error = "This community has been banned", error_desc = c.ban_message or "This community has been banned for breaking the rules."), 403
+        if c.mode == "private":
+            return render_template("error.html", v = v, error = "This community is private", error_desc = c.description or ''), 403
+        abort(403)
+    if not c.can_submit(v):
+        abort(403)
     return render_template("submit.html", v = v, c = c)
 
 @app.route('/user/<name>/submit/')
 def render_submitinu(name):
-    c = get_community('@' + name)
+    c = Community.get_community('@' + name)
     if not c:
         abort(404)
     username = session.get('username')
     v = User.get_user(username) if username else None
     if not v:
         return redirect('/login/')
-    if v.admin < 1:
-        if v.banned or c.banned.filter_by(user_id = v.id).first():
-            abort(403)
-        if c.mode != 'public' and not c.contributors.filter_by(user_id = v.id).first():
-            abort(403)
-        if c.mode == 'archived' and not c.mods.filter_by(user_id = v.id).first():
-            abort(403)
+    if not c.can_submit(v):
+        abort(403)
     return render_template("submit.html", v = v, c = c)
 
 @app.route('/c/<name>/')
@@ -93,6 +89,12 @@ def render_commmunity(name):
         abort(404)
     username = session.get('username')
     v = User.get_user(username) if username else None
+    if not c.can_view(v):
+        if c.is_banned:
+            return render_template("error.html", v = v, error = "This community has been banned", error_desc = c.ban_message or "This community has been banned for breaking the rules."), 403
+        if c.mode == "private":
+            return render_template("error.html", v = v, error = "This community is private", error_desc = c.description or ''), 403
+        abort(403)
     return render_template("community.html", v = v, c = c)
 
 @app.route('/communities/create/')
@@ -118,6 +120,14 @@ def render_post(id):
     v = User.get_user(username) if username else None
     p = Post.by_id(id)
 
+    if p.communities.count() == 1:
+        c = p.communities.first().community
+        if c.mode == "private":
+            abort(403)
+
+    if p.admin_nuked and (not v or v.admin < 1):
+        return render_template("error.html", v = v, error = "This post is no longer available :(", error_desc = "This post has been removed by the admins for breaking the site rules or violating the law."), 403
+
     comments = p.comments
     all_comments = OrderedDict()
     commenttree = []
@@ -138,7 +148,18 @@ def render_postinc(name, id):
     username = session.get('username')
     v = User.get_user(username) if username else None
     p = Post.by_id(id)
+
     c = Community.get_community(name)
+    if not c.can_view(v):
+        if c.is_banned:
+            return render_template("error.html", v = v, error = "This community has been banned", error_desc = c.ban_message or "This community has been banned for breaking the rules."), 403
+        if c.mode == "private":
+            return render_template("error.html", v = v, error = "This community is private", error_desc = c.description or ''), 403
+        abort(403)
+
+    if p.admin_nuked and (not v or v.admin < 1):
+        return render_template("error.html", v = v, error = "This post is no longer available :(", error_desc = c.ban_message or "This post has been removed by the admins for breaking the site rules or violating the law."), 403
+
     cp = p.communities.filter_by(community_id = c.id).first()
     if not cp:
         abort(404)
@@ -165,6 +186,12 @@ def render_editc(name):
     v = User.get_user(username) if username else None
     if not v:
         return redirect('/login/')
+    if not c.can_view(v):
+        if c.is_banned:
+            return render_template("error.html", v = v, error = "This community has been banned", error_desc = c.ban_message or "This community has been banned for breaking the rules."), 403
+        if c.mode == "private":
+            return render_template("error.html", v = v, error = "This community is private", error_desc = c.description or ''), 403
+        abort(403)
     if v.admin < 1 and not c.mods.filter_by(user_id = v.id).first():
         abort(403)
     return render_template("edit_community.html", v = v, c = c)
@@ -178,6 +205,12 @@ def render_editprofile(name):
     v = User.get_user(username) if username else None
     if not v:
         return redirect('/login/')
+    if not c.can_view(v):
+        if c.is_banned:
+            return render_template("error.html", v = v, error = "This community has been banned", error_desc = c.ban_message or "This community has been banned for breaking the rules."), 403
+        if c.mode == "private":
+            return render_template("error.html", v = v, error = "This community is private", error_desc = c.description or ''), 403
+        abort(403)
     if v.admin < 1 and not c.mods.filter_by(user_id = v.id).first():
         abort(403)
     return render_template("edit_community.html", v = v, c = c)
@@ -199,7 +232,7 @@ def edit_community():
         if not allowed_names.search(name):
             flash("CNAME_NOT_VALID")
             return redirect('/communities/create/')
-        c = Community(name = name, title = request.form['title'].strip(), creator_id = v.id, mode = request.form['mode'], description = request.form['description'], icon_url = request.form['icon_url'], banner_url = request.form['banner_url'])
+        c = Community(name = name, title = request.form['title'].strip(), creator_id = v.id, mode = request.form['mode'], description = request.form['description'].strip(), sidebar = request.form['sidebar'].strip(), icon_url = request.form['icon_url'].strip(), banner_url = request.form['banner_url'].strip())
         if not c:
             abort(500)
         db.session.add(c)
@@ -212,11 +245,14 @@ def edit_community():
         flash("COMMUNITY_CREATED")
         return redirect('/c/' + name + '/edit/')
     else:
+        if not c.can_view(v):
+            abort(403)
         if v.admin < 1 and not c.mods.filter_by(user_id = v.id).first():
             abort(403)
         c.title = request.form['title'].strip()
         c.mode = request.form['mode'].strip()
         c.description = request.form['description'].strip()
+        c.sidebar = request.form['sidebar'].strip()
         c.icon_url = request.form['icon_url'].strip()
         c.banner_url = request.form['banner_url'].strip()
         db.session.commit()
@@ -244,14 +280,19 @@ def submit():
         for cname in communities:
             c = Community.get_community(cname)
             if c:
-                if v.admin < 1 and (c.banned.filter_by(user_id = v.id).first() or (c.mode != "public" and (c.mode == "archived" or not c.contributors.filter_by(user_id = v.id).first()) and not c.mods.filter_by(user_id = v.id).first())):
-                    continue
+                if not c.can_submit(v):
+                    flash("CANT_SUBMIT")
+                    return redirect("/submit/")
+                if len(communities) > 1 and c.mode == "private":
+                    flash("CANT_SUBMIT_PRIVATE")
+                    return redirect("/submit/")
                 cp = CommunityPost(post_id = p.id, community_id = c.id)
                 if v.spammer:
                     cp.removed = True
                 db.session.add(cp)
         db.session.commit()
-        return redirect(('/c/' + communities[0] if len(communities) > 0 else '') + '/post/' + str(p.id) + '/')
+        posted_in = p.posted_in(v)
+        return redirect(('/c/' + posted_in[0].community.name if len(posted_in) > 0 else '') + '/post/' + str(p.id) + '/')
 
 @app.route('/api/comment', methods = ['POST'])
 def submit_comment():
@@ -272,9 +313,9 @@ def submit_comment():
         cps = comment.post.communities
         for cp in cps:
             c = cp.community
-            if v.admin < 1 and (c.banned.filter_by(user_id = v.id).first() or ((c.mode != "public" and c.mode != "restricted") and (c.mode == "archived" or not c.contributors.filter_by(user_id = v.id).first()) and not c.mods.filter_by(user_id = v.id).first())):
-                continue
-            if comment.parent_id != 0 and not comment.parent.communities.filter_by(comment_id = comment.parent_id).first():
+            if not c.can_comment(v):
+                flash("CANT_COMMENT")
+            if comment.parent_id != 0 and not comment.parent.communities.filter_by(community_id = c.id).first():
                 continue
             cc = CommunityComment(comment_id = comment.id, community_id = cp.community_id, post_id = comment.post_id, cpost_id = cp.id)
             if v.spammer:
@@ -282,7 +323,7 @@ def submit_comment():
             db.session.add(cc)
         db.session.commit()
         c = Community.by_id(int(request.form['community']))
-        if c:
+        if c and c.can_comment(v):
             return redirect(('/c/' + c.name) + '/post/' + str(comment.post_id) + '/')
         else:
             return redirect('/post/' + str(comment.post_id) + '/')
@@ -298,9 +339,11 @@ def render_userpage(username):
     if not v or v.id != u.id:
         if u.banned and (not u.banned_until or u.banned_until <= 0):
             return render_template("error.html", v = v, error = "This user is banned"), 403
-        elif u.deleted:
+        if c.mode == "private":
+            return render_template("error.html", v = v, error = "This user's profile is private"), 403
+        if u.deleted:
             abort(404)
-        elif u.spammer:
+        if u.spammer:
             abort(404)
     return render_template("userpage.html", v = v, user = u, c = c)
 
@@ -310,7 +353,7 @@ def register():
 
     email = request.form['email'].strip()
     username = request.form['username'].strip()
-    password = request.form['password'].strip()
+    password = request.form['password']
     allowed_names = re.compile('^[a-zA-Z0-9_-]{1,25}$')
     if not allowed_names.search(username):
         flash("REGISTER_INVALID_USERNAME")
@@ -318,7 +361,7 @@ def register():
     if User.get_user(username):
         flash("REGISTER_USERNAME_TAKEN")
         return redirect('/login/')
-    if password != request.form['password2'].strip():
+    if password != request.form['password2']:
         flash("REGISTER_PASSWORDS_DONT_MATCH")
         return redirect('/login/')
     if email == '':
@@ -348,7 +391,7 @@ def logout():
 @app.route('/api/login', methods = ['POST'])
 def login():
     username = request.form['username'].strip()
-    password = request.form['password'].strip()
+    password = request.form['password']
     allowed_names = re.compile('^[a-zA-Z0-9_-]{1,25}$')
     if not allowed_names.search(username):
         flash("LOGIN_INVALID_USERNAME")
