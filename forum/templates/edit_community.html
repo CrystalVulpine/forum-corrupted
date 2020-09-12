@@ -30,8 +30,8 @@
 				<input type="hidden" name="name" value="{{ c.name }}">
 			{% endif %}
 			<input type="text" name="title" placeholder="Title" class="search-bar" minlength="1" maxlength="50" value="{{ c.title if c and c.title else '' }}" required>
-			<input type="text" name="description" placeholder="Description" class="search-bar" minlength="1" maxlength="500" value="{{ c.description if c and c.description else '' }}">
-			<input type="text" name="sidebar" placeholder="Sidebar" class="search-bar" minlength="1" maxlength="10000" value="{{ c.sidebar if c and c.sidebar else '' }}">
+			<textarea type="text" name="description" placeholder="Description" class="search-bar" minlength="1" maxlength="500" value="{{ c.description if c and c.description else '' }}"></textarea>
+			<textarea type="text" name="sidebar" placeholder="Sidebar" class="search-bar" minlength="1" maxlength="10000" value="{{ c.sidebar if c and c.sidebar else '' }}"></textarea>
 			<select name="mode">
 				<option value="public"{{ ' selected="true"' if c and c.mode == 'public' else '' }}>Public</option>
 				<option value="private"{{ ' selected="true"' if c and c.mode == 'private' else '' }}>Private</option>

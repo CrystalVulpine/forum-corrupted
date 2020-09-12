@@ -62,7 +62,21 @@
 					<h4><a href="{{ '/c/' + communities[0].community.name if communities|length > 0 else '' }}/post/{{ comment.post_id }}/comment/{{ comment.id }}">{{ comment.post.title }}</a></h4>
 					<small>Posted by <a href="/user/{{ comment.author.username }}/">{{ comment.author.username }}</a> at {{ comment.creation_date }}</small><br>
 					<p>{{ comment.body }}</p>
-					<small><a class="reply-button" id="reply-{{ comment.id }}" href="javascript:void(0)">reply</a></small>
+					<small><a class="reply-button" id="reply-{{ comment.id }}" 
+					{% if not v %}
+						href="/login/"
+					{% else %}
+						href="javascript:void(0)" onclick="document.getElementById('comment-{{ comment.id }}').style = ''"
+					{% endif %}
+					>reply</a></small>
+					<form id="comment-{{ comment.id }}" action="/api/comment" method="post" style="display: none!important">
+						<textarea type="text" name="body" placeholder="Comment" class="search-bar" maxlength="10000"></textarea>
+						<input type="hidden" name="post" value="{{ comment.post.id }}">
+						<input type="hidden" name="parent" value="{{ comment.id }}">
+						<input type="hidden" name="community" value="0">
+						<a onclick="document.getElementById('comment-{{ comment.id }}').submit()" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Submit</a>
+						<a onclick="document.getElementById('comment-{{ comment.id }}').style = 'display: none!important'" class="submit-button" href="javascript:void(0)" style="margin-right:-15px">Cancel</a>
+					</form>
 				</div>
 			{% endif %}
 		{% endfor %}

@@ -122,7 +122,7 @@ def render_post(id):
 
     if p.communities.count() == 1:
         c = p.communities.first().community
-        if c.mode == "private":
+        if c.mode == "private" and (not v or not c.contributors.filter_by(user_id = v.id).first()):
             abort(403)
 
     if p.admin_nuked and (not v or v.admin < 1):

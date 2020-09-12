@@ -29,7 +29,7 @@
 		<form id="submit" action="/api/submit" method="post">
 			<input type="text" name="title" placeholder="Title" class="search-bar" minlength="1" maxlength="500" required>
 			<input type="text" name="url" placeholder="URL" class="search-bar" maxlength="2000">
-			<input type="text" name="body" placeholder="Body" class="search-bar" maxlength="10000">
+			<textarea type="text" name="body" placeholder="Body" class="search-bar" maxlength="10000"></textarea>
 			<input type="text" name="communities" placeholder="Communities to post in (separate by space)" class="search-bar"{{' value=' + c.name if c else ''}}>
 			{% if "CANT_SUBMIT" in get_flashed_messages() %}
 				<p style="color:red">You can't submit in one or more of these communities. You may be banned or not have access. Remove them and try again.</p>
