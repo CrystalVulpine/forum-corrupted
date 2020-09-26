@@ -25,7 +25,7 @@
 		<div class="banner" style="background: url({{ c.banner_url }})"></div>
 	</div>
 	<div class="side">
-		<p>{{ c.sidebar if c.sidebar and c.sidebar != '' else c.description if c.description else '' }}</p>
+		<div class="md">{{ c.sidebar|markdown if c.sidebar and c.sidebar != '' else c.description|markdown if c.description else '' }}</div>
 		{% if not user_banned %}
 			{% if c.locked and not (v and v.admin >= 1) %}
 				<p class="submit-button-disabled">Posts banned</p>
@@ -61,7 +61,7 @@
 					{% set communities = comment.post.posted_in(v) %}
 					<h4><a href="{{ '/c/' + communities[0].community.name if communities|length > 0 else '' }}/post/{{ comment.post_id }}/comment/{{ comment.id }}">{{ comment.post.title }}</a></h4>
 					<small>Posted by <a href="/user/{{ comment.author.username }}/">{{ comment.author.username }}</a> at {{ comment.creation_date }}</small><br>
-					<p>{{ comment.body }}</p>
+					<div class="md">{{ comment.body|markdown }}</div>
 					<small><a class="reply-button" id="reply-{{ comment.id }}" 
 					{% if not v %}
 						href="/login/"

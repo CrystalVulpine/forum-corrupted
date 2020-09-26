@@ -28,7 +28,7 @@
 	{% endif %}
 	<div class="side">
 		{% if c %}
-			<p>{{ c.sidebar if c.sidebar and c.sidebar != '' else c.description if c.description else '' }}</p>
+			<div class="md">{{ c.sidebar|markdown if c.sidebar and c.sidebar != '' else c.description|markdown if c.description else '' }}</div>
 		{% endif %}
 		{% if not user_banned %}
 			{% if not c %}
@@ -70,7 +70,7 @@
 				</small>
 			{% endif %}
 			<br><div class="body">
-				<p>{{ p.body }}</p>
+				<div class="md">{{ p.body|markdown }}</div>
 			</div>
 		</div>
 		{% macro render_comment(pcomment) -%}
@@ -88,7 +88,7 @@
 					{% if ccomment.removed and not (v and v.id == comment.author_id)  %}
 						<em style="background-color: gray">[removed]</em>
 					{% else %}
-						<p>{{ comment.body }}</p>
+						<div class="md">{{ comment.body|markdown }}</div>
 					{% endif %}
 					{% if not c or c.can_comment(v) %}
 						<small><a class="reply-button" id="reply-{{ comment.id }}" 

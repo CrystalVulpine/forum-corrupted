@@ -20,7 +20,7 @@
 		</div>
 	</div>
 	<div class="side">
-		<p>{{ sidebar_text }}</p>
+		<div class="md">{{ sidebar_text|markdown }}</div>
 		{% if not (v and v.banned) %}
 			<a class="submit-button" href="{{ '/submit/' if v else '/login/' }}">Submit a post</a>
 		{% endif %}

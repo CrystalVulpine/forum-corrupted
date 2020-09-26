@@ -99,5 +99,17 @@ html, body {
 
 .comment {
 	margin: 5px;
+	background-color: #eee;
+}
+
+.md p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.md h1, .md h2 {
+	font-weight: normal;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
 }
 

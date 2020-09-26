@@ -2,6 +2,7 @@ from flask import *
 from sqlalchemy import *
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, deferred, joinedload, lazyload, contains_eager
+from flaskext.markdown import Markdown
 import re
 
 from forum.user import *
@@ -13,6 +14,8 @@ from forum.__main__ import app,db
 
 db.create_all()
 db.session.commit()
+
+Markdown(app)
 
 
 @app.route('/')
@@ -121,8 +124,8 @@ def render_post(id):
     p = Post.by_id(id)
 
     if p.communities.count() == 1:
-        c = p.communities.first().community
-        if c.mode == "private" and (not v or not c.contributors.filter_by(user_id = v.id).first()):
+        c = getattr(p.communities.first(), 'community', None)
+        if c and c.mode == "private" and (not v or not c.contributors.filter_by(user_id = v.id).first()):
             abort(403)
 
     if p.admin_nuked and (not v or v.admin < 1):

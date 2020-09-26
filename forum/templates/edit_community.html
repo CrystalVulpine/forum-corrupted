@@ -8,6 +8,9 @@
 </head>
 
 <body>
+	{% set user_banned = v and c and v.admin < 1 and (v.banned or c.banned.filter_by(user_id = v.id).first()) %}
+	{% set user_contributor = v and c and c.contributors.filter_by(user_id = v.id).first() %}
+	{% set user_mod = v and c and c.mods.filter_by(user_id = v.id).first() %}
 	<div class="header">
 		<a href="/">Home</a>
 		<div class="header-right">
@@ -18,6 +21,27 @@
 				<a href="/login">Sign up or Log in</a>
 			{% endif %}
 		</div>
+	</div>
+	<div class="side">
+		{% if c %}
+			<div class="md">{{ c.sidebar|markdown if c.sidebar and c.sidebar != '' else c.description|markdown if c.description else '' }}</div>
+		{% endif %}
+		{% if not user_banned %}
+			{% if not c %}
+				<a class="submit-button" href="{{ '/submit' if v else '/login/' }}">Submit a post</a>
+			{% elif c.locked and not (v and v.admin >= 1) %}
+				<p class="submit-button-disabled">Posts banned</p>
+				<small>This community has been banned: {{ c.ban_message if c.ban_message else 'This community has been banned for breaking the rules.' }}</small>
+			{% elif c.mode == "public" or user_mod or (user_contributor and c.mode != "archived") or (v and v.admin >= 1) %}
+				<a class="submit-button" href="{{ '/c/' + c.name + '/submit/' if v else '/login/' }}">Submit a post</a>
+			{% elif c.mode == "archived" %}
+				<p class="submit-button-disabled">New posts disabled</p>
+				<small>This community is now archived and read-only.</small>
+			{% else %}
+				<p class="submit-button-disabled">Posts restricted</p>
+				<small>Posts in this community are restricted to approved users.</small>
+			{% endif %}
+		{% endif %}
 	</div>
 	<div class="content">
 		<form id="community" action="/api/edit_community" method="post">
@@ -30,8 +54,8 @@
 				<input type="hidden" name="name" value="{{ c.name }}">
 			{% endif %}
 			<input type="text" name="title" placeholder="Title" class="search-bar" minlength="1" maxlength="50" value="{{ c.title if c and c.title else '' }}" required>
-			<textarea type="text" name="description" placeholder="Description" class="search-bar" minlength="1" maxlength="500" value="{{ c.description if c and c.description else '' }}"></textarea>
-			<textarea type="text" name="sidebar" placeholder="Sidebar" class="search-bar" minlength="1" maxlength="10000" value="{{ c.sidebar if c and c.sidebar else '' }}"></textarea>
+			<textarea type="text" name="description" placeholder="Description" class="search-bar" minlength="1" maxlength="500">{{ c.description if c and c.description else '' }}</textarea>
+			<textarea type="text" name="sidebar" placeholder="Sidebar" class="search-bar" minlength="1" maxlength="10000">{{ c.sidebar if c and c.sidebar else '' }}</textarea>
 			<select name="mode">
 				<option value="public"{{ ' selected="true"' if c and c.mode == 'public' else '' }}>Public</option>
 				<option value="private"{{ ' selected="true"' if c and c.mode == 'private' else '' }}>Private</option>
