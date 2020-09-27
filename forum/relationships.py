@@ -69,8 +69,6 @@ class CommunityPost(db.Model):
     flair = Column(String, default=None)
     flair_class = Column(String, default=None)
 
-    comments=relationship("CommunityComment", lazy="dynamic", primaryjoin="CommunityComment.cpost_id==CommunityPost.id")
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

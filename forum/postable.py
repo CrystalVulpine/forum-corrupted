@@ -7,7 +7,6 @@ from forum.__main__ import db
 import forum.util as util
 
 class Postable(object):
-    id = Column(Integer, primary_key=True)
     body = Column(String, default=None)
     deleted = Column(Boolean, default=False)
     created_timestamp = Column(Integer, default=0)

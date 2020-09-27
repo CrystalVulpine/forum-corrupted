@@ -8,6 +8,7 @@ import forum.postable as postable
 
 class Post(postable.Postable, db.Model):
     __tablename__ = "posts"
+    id = Column(Integer, primary_key=True)
     title = Column(String, default=None)
     url = Column(String, default=None)
     author_id = Column(Integer, ForeignKey("users.id"))

@@ -110,15 +110,8 @@ def render_createc():
         abort(403)
     return render_template("edit_community.html", v = v)
 
-class ParentComment:
-    def __init__(self, comment):
-        self.comment = comment
-        self.children = []
-
 @app.route('/post/<id>/')
 def render_post(id):
-    from collections import OrderedDict 
-
     username = session.get('username')
     v = User.get_user(username) if username else None
     p = Post.by_id(id)
@@ -130,24 +123,11 @@ def render_post(id):
 
     if p.admin_nuked and (not v or v.admin < 1):
         return render_template("error.html", v = v, error = "This post is no longer available :(", error_desc = "This post has been removed by the admins for breaking the site rules or violating the law."), 403
-
-    comments = p.comments
-    all_comments = OrderedDict()
-    commenttree = []
-    for comment in comments:
-        pc = ParentComment(CommunityComment(comment_id = comment.id, comment = comment))
-        all_comments[comment.id] = pc
-        if comment.parent_id == 0:
-            commenttree.append(pc)
-        else:
-            all_comments[comment.parent_id].children.append(pc)
             
-    return render_template("post.html", v = v, p = p, comments = commenttree)
+    return render_template("post.html", v = v, p = p)
 
 @app.route('/c/<name>/post/<id>/')
 def render_postinc(name, id):
-    from collections import OrderedDict 
-
     username = session.get('username')
     v = User.get_user(username) if username else None
     p = Post.by_id(id)
@@ -167,18 +147,7 @@ def render_postinc(name, id):
     if not cp:
         abort(404)
 
-    comments = cp.comments
-    all_comments = OrderedDict()
-    commenttree = []
-    for comment in comments:
-        pc = ParentComment(comment)
-        all_comments[comment.comment_id] = pc
-        if comment.comment.parent_id == 0:
-            commenttree.append(pc)
-        else:
-            all_comments[comment.comment.parent_id].children.append(pc)
-
-    return render_template("post.html", v = v, p = p, c = c, cp = cp, comments = commenttree)
+    return render_template("post.html", v = v, p = p, c = c, cp = cp)
 
 @app.route('/c/<name>/edit/')
 def render_editc(name):
