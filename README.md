@@ -1,4 +1,4 @@
-This is a reddit/ruqqus style forum, but with the added perk that you can post to different communities at the same time. It's just a small project I made for fun and is **not supported in any way**. Security is not a consideration and this project is very unstable. It is not recommended for real-world use, and I am not responsible for any issues it causes you.
+This is a reddit/ruqqus style forum, but with the added perk that you can submit a post to multiple communities at once. It's just a small project I made for fun and is **not supported in any way**. Security is not a consideration and this project is very unstable. It is not recommended for real-world use, and I am not responsible for any issues it causes you.
 
 ## Setup
 
