@@ -34,7 +34,7 @@
 				<div class="post">
 					{% set communities = p.posted_in(v) %}
 					<h4><a href="{{ '/c/' + communities[0].community.name if communities|length > 0 else '' }}/post/{{ p.id }}/">{{ p.title }}</a></h4>
-					<small>Posted by <a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a> at {{ p.creation_date }}</small><br>
+					<small>Posted by <a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a> <time class="timestamp" title="{{ p.created_datetime.strftime("%a %b %-d %Y at %H:%M:%S UTC") }}" datetime="{{ p.created_datetime.strftime("%d %b %Y %H:%M:%S UTC") }}">{{ p.created_ago }}</time></small><br>
 					{% if communities|length > 0 %}
 						<small>Posted in: 
 						{% for com in communities %}

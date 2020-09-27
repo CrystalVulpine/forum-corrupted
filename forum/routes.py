@@ -178,7 +178,7 @@ def render_postinc(name, id):
         else:
             all_comments[comment.comment.parent_id].children.append(pc)
 
-    return render_template("post.html", v = v, p = p, c = c, comments = commenttree)
+    return render_template("post.html", v = v, p = p, c = c, cp = cp, comments = commenttree)
 
 @app.route('/c/<name>/edit/')
 def render_editc(name):

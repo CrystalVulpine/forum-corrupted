@@ -24,14 +24,14 @@ class User(db.Model):
     post_score = Column(Integer, default=0)
     comment_score = Column(Integer, default=0)
 
-    posts=relationship("Post", lazy="dynamic", primaryjoin="Post.author_id==User.id")
-    comments=relationship("Comment", lazy="dynamic", primaryjoin="Comment.author_id==User.id")
+    posts=relationship("Post", lazy="dynamic", primaryjoin="Post.author_id==User.id", backref="author")
+    comments=relationship("Comment", lazy="dynamic", primaryjoin="Comment.author_id==User.id", backref="author")
 
-    moderates=relationship("Moderator", lazy="dynamic")
-    banned_from=relationship("Ban", lazy="dynamic")
-    contributor_of=relationship("Contributor", lazy="dynamic")
-    subscriptions=relationship("Subscription", lazy="dynamic")
-    blocked=relationship("Block", lazy="dynamic")
+    moderates=relationship("Moderator", lazy="dynamic", backref="user")
+    banned_from=relationship("Ban", lazy="dynamic", backref="user")
+    contributor_of=relationship("Contributor", lazy="dynamic", backref="user")
+    subscriptions=relationship("Subscription", lazy="dynamic", backref="user")
+    blocked=relationship("Block", lazy="dynamic", backref="user")
 
 
     def __init__(self, **kwargs):

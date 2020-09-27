@@ -5,6 +5,7 @@
 	<title>{{ p.title }} | CrystalVulpine's forum</title>
 	<link rel='stylesheet' type='text/css' href='{{ url_for('static', filename='main.css') }}'/>
 	<script src='{{ url_for('static', filename='jquery.min.js') }}'></script>
+	<script src='{{ url_for('static', filename='main.js') }}'></script>
 </head>
 
 <body>
@@ -60,7 +61,8 @@
 			{% else %}
 				<a href="/user/{{ p.author.username }}/">{{ p.author.username }}</a>
 			{% endif %}
-			at {{ p.creation_date }}</small>
+			<time class="timestamp" title="{{ p.created_datetime.strftime("%a %b %-d %Y at %H:%M:%S UTC") }}" datetime="{{ p.created_datetime.strftime("%d %b %Y %H:%M:%S UTC") }}">{{ p.created_ago }}</time>
+			</small>
 			
 			{% if communities|length > 0 %}
 				<br><small>Posted in: 
@@ -70,7 +72,11 @@
 				</small>
 			{% endif %}
 			<br><div class="body">
-				<div class="md">{{ p.body|markdown }}</div>
+				{% if cp and cp.removed %}
+					<em style="background-color: gray">[removed]</em>
+				{% else %}
+					<div class="md">{{ p.body|markdown if p.body else '' }}</div>
+				{% endif %}
 			</div>
 		</div>
 		{% macro render_comment(pcomment) -%}
@@ -84,11 +90,12 @@
 					{% else %}
 						<a href="/user/{{ comment.author.username }}/">{{ comment.author.username }}</a>
 					{% endif %}
-					at {{ comment.creation_date }}</small>
+					<time class="timestamp" title="{{ comment.created_datetime.strftime("%a %b %-d %Y at %H:%M:%S UTC") }}" datetime="{{ comment.created_datetime.strftime("%d %b %Y %H:%M:%S UTC") }}">{{ comment.created_ago }}</time>
+					</small>
 					{% if ccomment.removed and not (v and v.id == comment.author_id)  %}
 						<em style="background-color: gray">[removed]</em>
 					{% else %}
-						<div class="md">{{ comment.body|markdown }}</div>
+						<div class="md">{{ comment.body|markdown if comment.body else '' }}</div>
 					{% endif %}
 					{% if not c or c.can_comment(v) %}
 						<small><a class="reply-button" id="reply-{{ comment.id }}" 

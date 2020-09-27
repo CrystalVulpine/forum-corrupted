@@ -11,6 +11,8 @@ class Community(db.Model):
     title = Column(String, default=None)
     deleted = Column(Boolean, default=False)
     is_banned = Column(Boolean, default=False)
+    ban_message = Column(String, default=None)
+    banned_at = Column(Integer, default=0)
     locked = Column(Boolean, default=False)
     mode = Column(String, default='public')
     creation_date = Column(Integer, default=0)
@@ -20,15 +22,14 @@ class Community(db.Model):
     banner_url = Column(String, default=None)
     stylesheet = Column(String, default=None)
     sidebar = Column(String, default=None)
-    ban_message = Column(String, default=None)
 
-    posts=relationship("CommunityPost", lazy="dynamic")
-    comments=relationship("CommunityComment", lazy="dynamic")
+    posts=relationship("CommunityPost", lazy="dynamic", backref="community")
+    comments=relationship("CommunityComment", lazy="dynamic", backref="community")
 
-    mods=relationship("Moderator", lazy="dynamic")
-    banned=relationship("Ban", lazy="dynamic")
-    contributors=relationship("Contributor", lazy="dynamic")
-    subscribers=relationship("Subscription", lazy="dynamic")
+    mods=relationship("Moderator", lazy="dynamic", backref="community")
+    banned=relationship("Ban", lazy="dynamic", backref="community")
+    contributors=relationship("Contributor", lazy="dynamic", backref="community")
+    subscribers=relationship("Subscription", lazy="dynamic", backref="community")
 
     def __init__(self, **kwargs):
         kwargs["creation_date"] = int(time.time())
